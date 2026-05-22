@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joel Molina — Diseño Gráfico & Identidad Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        studio: '#FFFFFF',
+                        obsidian: '#0D0E11',
+                        cyber: 'var(--accent-color)',
+                        blueprint: '#E1E4E8'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --accent-color: #FF5A00;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .grid-blueprint {
+            background-size: 24px 24px;
+            background-image: 
+                linear-gradient(to right, rgba(225, 228, 232, 0.4) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(225, 228, 232, 0.4) 1px, transparent 1px);
+        }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #FFFFFF;
+            border-left: 1px solid #E1E4E8;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #0D0E11;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            height: 280px;
+        }
+        
+        /* SEMITONO GENERATIVO - ESTILO NUBES NEGRAS */
+        .dither-hero {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            mix-blend-mode: screen;
+            opacity: 0.25;
+        }
+
+        /* LÍNEA LED CON DEGRADADO ANIMADO - ANCHO COMPLETO */
+        .led-gradient-section {
+            position: relative;
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            background: white;
+            padding: 2rem 0;
+            overflow: hidden;
+        }
+
+        .led-gradient-line {
+            position: relative;
+            height: 2px;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                #0052FF 15%,
+                #52B788 50%,
+                #FFB700 85%,
+                transparent 100%
+            );
+            overflow: hidden;
+        }
+
+        .led-gradient-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            animation: ledGlide 4s ease-in-out infinite;
+        }
+
+        @keyframes ledGlide {
+            0% {
+                transform: translateX(-100%);
+            }
+            50% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* ILUMINACIÓN SUTIL DEBAJO DE LA LÍNEA LED */
+        .led-glow {
+            position: relative;
+            height: 8px;
+            background: linear-gradient(
+                180deg,
+                rgba(0, 82, 255, 0.08) 0%,
+                rgba(82, 183, 136, 0.05) 50%,
+                rgba(255, 183, 0, 0.08) 100%,
+                transparent 100%
+            );
+            filter: blur(8px);
+            pointer-events: none;
+        }
+
+        /* COLABORADORES - LOGOS SVG EN LÍNEA HORIZONTAL SCROLLABLE */
+        .collaborators-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1.5rem 0;
+            /* Ocultar scrollbar */
+            scrollbar-width: none;
+        }
+
+        .collaborators-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .collaborators-line {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 4rem;
+            flex-wrap: nowrap;
+            min-width: min-content;
+            padding: 0 2rem;
+        }
+
+        .collaborator-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 60px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .collaborator-logo svg {
+            width: 100%;
+            height: 100%;
+            fill: #0052FF;
+            opacity: 0.7;
+        }
+
+        .collaborator-logo:hover svg {
+            opacity: 1;
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(0, 82, 255, 0.3));
+        }
+
+        .service-card {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .service-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+        }
+
+        .btn-cta {
+            position: relative;
+            z-index: 10;
+        }
+        
+        .btn-cta:hover {
+            box-shadow: 0 8px 32px rgba(0, 82, 255, 0.15);
+        }
+
+        /* INDICADORES DE ACENTOS CON ANIMACIÓN */
+        .accent-indicator {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .accent-indicator.active {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 0 0 16px currentColor;
+            transform: scale(1.2);
+        }
+
+        .accent-indicator.active::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border: 2px solid currentColor;
+            border-radius: 4px;
+            animation: accentPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes accentPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body class="bg-studio text-obsidian font-sans antialiased">
+
+    <!-- NAVIGATION / HEADER -->
+    <header class="fixed top-0 left-0 right-0 h-14 border-b border-blueprint bg-studio/95 backdrop-blur-sm z-40 flex items-center px-6 md:px-12">
+        <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-cyber rounded-full animate-pulse"></div>
+                <span class="font-mono font-bold text-xs tracking-widest uppercase hidden sm:inline">JOEL MOLINA</span>
+            </div>
+            <nav class="flex items-center gap-6 font-mono text-xs uppercase tracking-widest">
+                <a href="#hero" class="text-gray-400 hover:text-cyber transition-colors">Inicio</a>
+                <a href="#servicios" class="text-gray-400 hover:text-cyber transition-colors">Servicios</a>
+                <a href="#brand" class="text-gray-400 hover:text-cyber transition-colors">Marca</a>
+                <a href="#contacto" class="text-gray-400 hover:text-cyber transition-colors">Contacto</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="relative w-full min-h-screen pt-14 flex items-center justify-center overflow-hidden bg-white">
+        <canvas id="heroDitherCanvas" class="dither-hero"></canvas>
+        
+        <div class="absolute inset-0 grid-blueprint opacity-20 z-0 pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-4xl mx-auto px-6 md:px-12 text-center">
+            <div class="inline-flex items-center gap-2 border border-blueprint rounded-full px-4 py-2 bg-white/90 backdrop-blur-sm mb-8">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyber animate-pulse"></span>
+                <span class="font-mono text-xs tracking-widest text-gray-600 uppercase font-bold">Bienvenido al estudio</span>
+            </div>
+
+            <h1 class="font-mono font-extrabold text-5xl md:text-7xl tracking-wider text-obsidian uppercase leading-tight mb-4">
+                Creative<br><span class="text-cyber">Logic</span> &<br>Pixel Precision
+            </h1>
+
+            <p class="text-base md:text-lg text-gray-600 font-sans max-w-2xl mx-auto mb-12 leading-relaxed">
+                Diseño gráfico e identidad digital que fusionan la audacia creativa con la perfección técnica. Cada proyecto es un acto de precisión matemática al servicio de la visión.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="#servicios" class="btn-cta relative border border-obsidian bg-obsidian text-white px-8 py-4 font-mono text-xs uppercase tracking-widest font-bold hover:bg-cyber hover:border-cyber transition-all">
+                    Explorar Servicios
+                </a>
+                <a href="#contacto" class="border border-blueprint px-8 py-4 font-mono text-xs uppercase tracking-widest font-bold hover:border-obsidian hover:text-obsidian transition-colors bg-white">
+                    Contactar
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- LÍNEA LED CON COLABORADORES - POSICIONADA ENTRE HERO Y SERVICIOS -->
+    <section class="led-gradient-section">
+        <div class="led-gradient-line"></div>
+        <div class="led-glow"></div>
+        
+        <!-- COLABORADORES EN LÍNEA HORIZONTAL -->
+        <div class="collaborators-container">
+            <div class="collaborators-line">
+                <!-- Logo 1 -->
+                <div class="collaborator-logo">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45"/>
+                        <text x="50" y="55" font-size="40" font-weight="bold" text-anchor="middle" font-family="monospace" fill="white">A</text>
+                    </svg>
+                </div>
+
+                <!-- Logo 2 -->
+                <div class="collaborator-logo">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="15" y="15" width="70" height="70" rx="5"/>
+                        <text x="50" y="60" font-size="40" font-weight="bold" text-anchor="middle" font-family="monospace" fill="white">B</text>
+                    </svg>
+                </div>
+
+                <!-- Logo 3 -->
+                <div class="collaborator-logo">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="50,20 80,80 20,80"/>
+                        <text x="50" y="65" font-size="35" font-weight="bold" text-anchor="middle" font-family="monospace" fill="white">C</text>
+                    </svg>
+                </div>
+
+                <!-- Logo 4 -->
+                <div class="collaborator-logo">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45"/>
+                        <text x="50" y="55" font-size="40" font-weight="bold" text-anchor="middle" font-family="monospace" fill="white">D</text>
+                    </svg>
+                </div>
+
+                <!-- Logo 5 -->
+                <div class="collaborator-logo">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="15" y="15" width="70" height="70" rx="5"/>
+                        <text x="50" y="60" font-size="40" font-weight="bold" text-anchor="middle" font-family="monospace" fill="white">E</text>
+                    </svg>
+                </div>
+
+                <!-- Logo 6 -->
+                <div class="collaborator-logo">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="50,20 80,80 20,80"/>
+                        <text x="50" y="65" font-size="35" font-weight="bold" text-anchor="middle" font-family="monospace" fill="white">F</text>
+                    </svg>
+                </div>
+
+                <!-- Logo 7 -->
+                <div class="collaborator-logo">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45"/>
+                        <text x="50" y="55" font-size="40" font-weight="bold" text-anchor="middle" font-family="monospace" fill="white">G</text>
+                    </svg>
+                </div>
+
+                <!-- Logo 8 -->
+                <div class="collaborator-logo">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="15" y="15" width="70" height="70" rx="5"/>
+                        <text x="50" y="60" font-size="40" font-weight="bold" text-anchor="middle" font-family="monospace" fill="white">H</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICIOS -->
+    <section id="servicios" class="relative w-full py-20 md:py-32 px-6 md:px-12 bg-white border-t border-blueprint">
+        <div class="absolute inset-0 grid-blueprint opacity-10 z-0 pointer-events-none"></div>
+        
+        <div class="max-w-6xl mx-auto relative z-10">
+            <div class="mb-16">
+                <span class="font-mono text-xs text-cyber tracking-widest uppercase font-bold">// SECCIÓN 01</span>
+                <h2 class="font-mono font-extrabold text-4xl md:text-5xl tracking-widest text-obsidian mt-2 uppercase">Servicios</h2>
+                <div class="w-12 h-px bg-cyber mt-4"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <!-- Identidad Corporativa -->
+                <div class="service-card border border-blueprint bg-white p-8 hover:border-obsidian">
+                    <div class="w-8 h-8 border-2 border-cyber mb-4 flex items-center justify-center">
+                        <span class="font-mono text-xs font-bold text-cyber">01</span>
+                    </div>
+                    <h3 class="font-mono font-bold text-lg text-obsidian uppercase mb-2">Identidad Corporativa</h3>
+                    <p class="text-sm text-gray-600 font-sans leading-relaxed mb-4">
+                        Diseño de marca integral: logo, paleta cromática, tipografía y guía de uso. Desde startups hasta corporativos.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Logo Design</span>
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Branding</span>
+                    </div>
+                </div>
+
+                <!-- Diseño Digital -->
+                <div class="service-card border border-blueprint bg-white p-8 hover:border-obsidian">
+                    <div class="w-8 h-8 border-2 border-cyber mb-4 flex items-center justify-center">
+                        <span class="font-mono text-xs font-bold text-cyber">02</span>
+                    </div>
+                    <h3 class="font-mono font-bold text-lg text-obsidian uppercase mb-2">Diseño Digital</h3>
+                    <p class="text-sm text-gray-600 font-sans leading-relaxed mb-4">
+                        UI/UX, interfaces web, sistemas de diseño. Interfaces minimalistas y técnicas optimizadas para conversión.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">UI/UX</span>
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Interfaces</span>
+                    </div>
+                </div>
+
+                <!-- Editorial -->
+                <div class="service-card border border-blueprint bg-white p-8 hover:border-obsidian">
+                    <div class="w-8 h-8 border-2 border-cyber mb-4 flex items-center justify-center">
+                        <span class="font-mono text-xs font-bold text-cyber">03</span>
+                    </div>
+                    <h3 class="font-mono font-bold text-lg text-obsidian uppercase mb-2">Diseño Editorial</h3>
+                    <p class="text-sm text-gray-600 font-sans leading-relaxed mb-4">
+                        Libros, revistas, catálogos. Tipografía refinada y composición que respeta el espacio en blanco.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Editorial</span>
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Tipografía</span>
+                    </div>
+                </div>
+
+                <!-- Ilustración -->
+                <div class="service-card border border-blueprint bg-white p-8 hover:border-obsidian">
+                    <div class="w-8 h-8 border-2 border-cyber mb-4 flex items-center justify-center">
+                        <span class="font-mono text-xs font-bold text-cyber">04</span>
+                    </div>
+                    <h3 class="font-mono font-bold text-lg text-obsidian uppercase mb-2">Ilustración Digital</h3>
+                    <p class="text-sm text-gray-600 font-sans leading-relaxed mb-4">
+                        Ilustraciones vectoriales personalizadas, técnicas de semitono generativo, arte digital conceptual.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Vectorial</span>
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Concepto</span>
+                    </div>
+                </div>
+
+                <!-- Motion & Animación -->
+                <div class="service-card border border-blueprint bg-white p-8 hover:border-obsidian">
+                    <div class="w-8 h-8 border-2 border-cyber mb-4 flex items-center justify-center">
+                        <span class="font-mono text-xs font-bold text-cyber">05</span>
+                    </div>
+                    <h3 class="font-mono font-bold text-lg text-obsidian uppercase mb-2">Motion & Interacción</h3>
+                    <p class="text-sm text-gray-600 font-sans leading-relaxed mb-4">
+                        Animaciones web, micro-interacciones, transiciones fluidas. Diseño que cobra vida con movimiento.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Motion</span>
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Web</span>
+                    </div>
+                </div>
+
+                <!-- Consultoría -->
+                <div class="service-card border border-blueprint bg-white p-8 hover:border-obsidian">
+                    <div class="w-8 h-8 border-2 border-cyber mb-4 flex items-center justify-center">
+                        <span class="font-mono text-xs font-bold text-cyber">06</span>
+                    </div>
+                    <h3 class="font-mono font-bold text-lg text-obsidian uppercase mb-2">Consultoría</h3>
+                    <p class="text-sm text-gray-600 font-sans leading-relaxed mb-4">
+                        Auditoría visual, estrategia de marca, asesoría en sistemas de diseño. Visión técnica y creativa.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Estrategia</span>
+                        <span class="text-xs font-mono text-gray-400 border border-blueprint rounded-full px-2 py-1">Auditoría</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MARCA (COLOR SYSTEM) -->
+    <section id="brand" class="relative w-full py-20 md:py-32 px-6 md:px-12 bg-white border-t border-blueprint">
+        <div class="absolute inset-0 grid-blueprint opacity-10 z-0 pointer-events-none"></div>
+        
+        <div class="max-w-6xl mx-auto relative z-10">
+            <div class="mb-16">
+                <span class="font-mono text-xs text-cyber tracking-widest uppercase font-bold">// SECCIÓN 02</span>
+                <h2 class="font-mono font-extrabold text-4xl md:text-5xl tracking-widest text-obsidian mt-2 uppercase">Mi Marca Personal</h2>
+                <div class="w-12 h-px bg-cyber mt-4"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+                <div>
+                    <h3 class="font-mono font-bold text-xl text-obsidian uppercase mb-4 border-b border-blueprint pb-3">Filosofía</h3>
+                    <p class="text-base text-gray-600 font-sans leading-relaxed mb-6">
+                        <strong class="text-obsidian">Creative Logic & Pixel Precision</strong> resume mi filosofía de diseño: la intersección audaz entre la libertad creativa y el rigor técnico del vector.
+                    </p>
+                    <p class="text-base text-gray-600 font-sans leading-relaxed mb-6">
+                        Cada proyecto es una composición matemática donde el espacio en blanco es tan importante como el contenido. Creo en la elegancia del minimalismo editorial, la tipografía refinada y las interfaces que respetan la atención del usuario.
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="font-mono text-xs font-bold text-cyber mt-1">■</span>
+                            <div>
+                                <h4 class="font-mono text-sm font-bold text-obsidian">Creative Logic</h4>
+                                <p class="text-xs text-gray-600">Visión estratégica, UX/UI y entendimiento profundo del problema.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="font-mono text-xs font-bold text-cyber mt-1">■</span>
+                            <div>
+                                <h4 class="font-mono text-sm font-bold text-obsidian">Pixel Precision</h4>
+                                <p class="text-xs text-gray-600">Ejecución técnica impecable, alineamiento geométrico, trazo vectorial perfecto.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-mono font-bold text-xl text-obsidian uppercase mb-4 border-b border-blueprint pb-3">Paleta Cromática</h3>
+                    <div class="space-y-4">
+                        <!-- Color 1 -->
+                        <div class="flex items-center gap-4 border border-blueprint p-4 bg-gray-50/50">
+                            <div class="w-16 h-16 bg-white border-2 border-blueprint flex-shrink-0"></div>
+                            <div>
+                                <h4 class="font-mono text-xs font-bold text-obsidian uppercase">Studio White</h4>
+                                <p class="font-mono text-xs text-gray-500 mt-1">#FFFFFF — 75%</p>
+                                <p class="text-xs text-gray-600 mt-1">Lienzo de alta gama. Espacio activo.</p>
+                            </div>
+                        </div>
+                        <!-- Color 2 -->
+                        <div class="flex items-center gap-4 border border-blueprint p-4 bg-gray-50/50">
+                            <div class="w-16 h-16 bg-obsidian flex-shrink-0"></div>
+                            <div>
+                                <h4 class="font-mono text-xs font-bold text-obsidian uppercase">Obsidian Black</h4>
+                                <p class="font-mono text-xs text-gray-500 mt-1">#0D0E11 — 15%</p>
+                                <p class="text-xs text-gray-600 mt-1">Estructura y tipografía principal.</p>
+                            </div>
+                        </div>
+                        <!-- Color 3 -->
+                        <div class="flex items-center gap-4 border border-blueprint p-4 bg-gray-50/50">
+                            <div class="w-16 h-16 bg-blueprint flex-shrink-0"></div>
+                            <div>
+                                <h4 class="font-mono text-xs font-bold text-obsidian uppercase">Blueprint Gray</h4>
+                                <p class="font-mono text-xs text-gray-500 mt-1">#E1E4E8 — Soporte</p>
+                                <p class="text-xs text-gray-600 mt-1">Micro-bordes y separaciones sutiles.</p>
+                            </div>
+                        </div>
+                        <!-- Acentos -->
+                        <div class="border border-blueprint p-4 bg-gray-50/50">
+                            <p class="font-mono text-xs font-bold text-obsidian uppercase mb-3">Acentos Tecnológicos</p>
+                            <div class="grid grid-cols-4 gap-3">
+                                <div class="flex flex-col items-center" onclick="setGlobalAccent('#FF5A00', 'orange')">
+                                    <div class="w-10 h-10 bg-[#FF5A00] border-2 border-obsidian cursor-pointer hover:scale-110 transition-transform accent-indicator"></div>
+                                    <span class="font-mono text-[9px] text-gray-600 mt-2 text-center leading-tight">Cyber Orange</span>
+                                </div>
+                                <div class="flex flex-col items-center" onclick="setGlobalAccent('#0052FF', 'cobalt')">
+                                    <div class="w-10 h-10 bg-[#0052FF] border-2 border-gray-300 cursor-pointer hover:scale-110 transition-transform accent-indicator"></div>
+                                    <span class="font-mono text-[9px] text-gray-600 mt-2 text-center leading-tight">Tech Cobalt</span>
+                                </div>
+                                <div class="flex flex-col items-center" onclick="setGlobalAccent('#52B788', 'sage')">
+                                    <div class="w-10 h-10 bg-[#52B788] border-2 border-gray-300 cursor-pointer hover:scale-110 transition-transform accent-indicator"></div>
+                                    <span class="font-mono text-[9px] text-gray-600 mt-2 text-center leading-tight">Vector Sage</span>
+                                </div>
+                                <div class="flex flex-col items-center" onclick="setGlobalAccent('#FFB700', 'yellow')">
+                                    <div class="w-10 h-10 bg-[#FFB700] border-2 border-gray-300 cursor-pointer hover:scale-110 transition-transform accent-indicator"></div>
+                                    <span class="font-mono text-[9px] text-gray-600 mt-2 text-center leading-tight">Solar Yellow</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proporción de colores -->
+            <div class="border border-blueprint bg-white p-8">
+                <h3 class="font-mono font-bold text-lg text-obsidian uppercase mb-6 border-b border-blueprint pb-3">Jerarquía Cromática (75 / 15 / 5 / 5)</h3>
+                <div class="flex flex-col md:flex-row items-center gap-12">
+                    <div class="flex-1 space-y-4">
+                        <div class="flex items-center justify-between border-b border-blueprint pb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-4 h-4 bg-white border-2 border-blueprint"></div>
+                                <span class="font-mono text-sm font-bold text-obsidian">75% Studio White</span>
+                            </div>
+                            <span class="text-xs text-gray-500 font-sans">Espacio limpio</span>
+                        </div>
+                        <div class="flex items-center justify-between border-b border-blueprint pb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-4 h-4 bg-obsidian"></div>
+                                <span class="font-mono text-sm font-bold text-obsidian">15% Obsidian Black</span>
+                            </div>
+                            <span class="text-xs text-gray-500 font-sans">Tipografía</span>
+                        </div>
+                        <div class="flex items-center justify-between border-b border-blueprint pb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-4 h-4 bg-cyber"></div>
+                                <span class="font-mono text-sm font-bold text-obsidian">05% Acento Activo</span>
+                            </div>
+                            <span class="text-xs text-gray-500 font-sans">CTA e interacción</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-4 h-4 bg-blueprint"></div>
+                                <span class="font-mono text-sm font-bold text-obsidian">05% Acentos Secundarios</span>
+                            </div>
+                            <span class="text-xs text-gray-500 font-sans">Detalles técnicos</span>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0 w-full md:w-auto">
+                        <div class="chart-container">
+                            <canvas id="colorChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACTO -->
+    <section id="contacto" class="relative w-full py-20 md:py-32 px-6 md:px-12 bg-white border-t border-blueprint">
+        <div class="absolute inset-0 grid-blueprint opacity-10 z-0 pointer-events-none"></div>
+        
+        <div class="max-w-4xl mx-auto relative z-10 text-center">
+            <span class="font-mono text-xs text-cyber tracking-widest uppercase font-bold">// SECCIÓN 03</span>
+            <h2 class="font-mono font-extrabold text-4xl md:text-5xl tracking-widest text-obsidian mt-4 uppercase mb-4">Iniciar Conversación</h2>
+            <div class="w-12 h-px bg-cyber mx-auto mb-8"></div>
+            
+            <p class="text-lg text-gray-600 font-sans max-w-2xl mx-auto mb-12 leading-relaxed">
+                ¿Tienes un proyecto en mente? Me encantaría colaborar contigo. Conversemos sobre cómo puedo ayudarte a llevar tu visión al siguiente nivel con diseño estratégico y precisión técnica.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="border border-blueprint bg-white p-6">
+                    <h3 class="font-mono text-sm font-bold text-obsidian uppercase mb-2">Email</h3>
+                    <a href="mailto:tu@email.com" class="font-mono text-xs text-cyber hover:text-obsidian transition-colors break-all">
+                        tu@email.com
+                    </a>
+                </div>
+                <div class="border border-blueprint bg-white p-6">
+                    <h3 class="font-mono text-sm font-bold text-obsidian uppercase mb-2">Behance</h3>
+                    <a href="https://behance.net" target="_blank" class="font-mono text-xs text-cyber hover:text-obsidian transition-colors">
+                        behance.net/joelmolina
+                    </a>
+                </div>
+                <div class="border border-blueprint bg-white p-6">
+                    <h3 class="font-mono text-sm font-bold text-obsidian uppercase mb-2">LinkedIn</h3>
+                    <a href="https://linkedin.com" target="_blank" class="font-mono text-xs text-cyber hover:text-obsidian transition-colors">
+                        linkedin.com/in/joelmolina
+                    </a>
+                </div>
+            </div>
+
+            <a href="mailto:tu@email.com" class="btn-cta inline-block relative border border-obsidian bg-obsidian text-white px-12 py-5 font-mono text-sm uppercase tracking-widest font-bold hover:bg-cyber hover:border-cyber transition-all">
+                Contactar Ahora
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-blueprint bg-white py-8 px-6 md:px-12">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="font-mono text-xs text-gray-500">
+                © 2026 Joel Molina — All Rights Reserved
+            </div>
+            <div class="flex items-center gap-6 font-mono text-xs text-gray-500">
+                <a href="#" class="hover:text-cyber transition-colors">Twitter</a>
+                <a href="#" class="hover:text-cyber transition-colors">Dribbble</a>
+                <a href="#" class="hover:text-cyber transition-colors">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const brandState = {
+            chartInstance: null,
+            heroCanvas: null,
+            heroCtx: null,
+            heroAnimationId: null,
+            waveTime: 0,
+            currentAccent: '#FF5A00'
+        };
+
+        window.addEventListener('DOMContentLoaded', function() {
+            initHeroDither();
+            initColorChart();
+            setGlobalAccent('#FF5A00', 'orange');
+        });
+
+        function initHeroDither() {
+            brandState.heroCanvas = document.getElementById('heroDitherCanvas');
+            if (!brandState.heroCanvas) return;
+            brandState.heroCtx = brandState.heroCanvas.getContext('2d');
+            
+            resizeHeroCanvas();
+            window.addEventListener('resize', resizeHeroCanvas);
+            
+            animateHeroDither();
+        }
+
+        function resizeHeroCanvas() {
+            if (!brandState.heroCanvas) return;
+            const parent = brandState.heroCanvas.parentElement;
+            brandState.heroCanvas.width = parent.clientWidth;
+            brandState.heroCanvas.height = parent.clientHeight;
+        }
+
+        function animateHeroDither() {
+            if (!brandState.heroCtx) return;
+            const ctx = brandState.heroCtx;
+            const w = brandState.heroCanvas.width;
+            const h = brandState.heroCanvas.height;
+            
+            ctx.clearRect(0, 0, w, h);
+            
+            brandState.waveTime += 0.008;
+            
+            // Espaciado más pequeño para mayor detalle
+            const spacing = 8;
+            const waveFreq = 50;
+            const dotSize = 2.5;
+            
+            for (let x = 0; x < w; x += spacing) {
+                for (let y = 0; y < h; y += spacing) {
+                    const dX = x - w / 2;
+                    const dY = y - h / 2;
+                    const dist = Math.sqrt(dX * dX + dY * dY);
+                    
+                    // Movimiento tipo nubes
+                    const sinVal = Math.sin((dist / waveFreq) - brandState.waveTime);
+                    const cosVal = Math.cos((x / 150) + (y / 150) + brandState.waveTime * 0.5);
+                    
+                    const offset = (sinVal + cosVal) * 2.5;
+                    const radius = Math.max(0.3, (offset + 3) * (dotSize / 8));
+                    
+                    ctx.beginPath();
+                    
+                    // Negro con variación de opacidad
+                    ctx.fillStyle = '#0D0E11';
+                    
+                    // Efecto de nubes: más denso en el centro
+                    const densityFactor = Math.max(0.05, 1 - (dist / 500));
+                    ctx.globalAlpha = (radius / 3) * densityFactor * 0.35;
+                    
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            ctx.globalAlpha = 1.0;
+            brandState.heroAnimationId = requestAnimationFrame(animateHeroDither);
+        }
+
+        function initColorChart() {
+            if (brandState.chartInstance) return;
+            
+            const canvas = document.getElementById('colorChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#FF5A00';
+
+            brandState.chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Studio White (75%)', 'Obsidian Black (15%)', 'Active Accent (5%)', 'Companion Accents (5%)'],
+                    datasets: [{
+                        data: [75, 15, 5, 5],
+                        backgroundColor: ['#FFFFFF', '#0D0E11', currentAccent, '#E1E4E8'],
+                        borderColor: ['#E1E4E8', '#0D0E11', '#0D0E11', '#0D0E11'],
+                        borderWidth: 2,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#0D0E11',
+                            titleFont: { family: "'JetBrains Mono', monospace", size: 11 },
+                            bodyFont: { family: "'Inter', sans-serif", size: 11 },
+                            cornerRadius: 0,
+                            padding: 10
+                        }
+                    }
+                }
+            });
+        }
+
+        function setGlobalAccent(hex, name) {
+            document.documentElement.style.setProperty('--accent-color', hex);
+            brandState.currentAccent = hex;
+            
+            // Actualizar indicadores de acentos
+            const indicators = document.querySelectorAll('.accent-indicator');
+            indicators.forEach((indicator) => {
+                indicator.classList.remove('active');
+            });
+            
+            // Marcar el acento activo
+            if (event && event.currentTarget) {
+                event.currentTarget.querySelector('.accent-indicator').classList.add('active');
+            }
+            
+            if (brandState.chartInstance) {
+                brandState.chartInstance.data.datasets[0].backgroundColor[2] = hex;
+                brandState.chartInstance.update();
+            }
+        }
+    </script>
+</body>
+</html>

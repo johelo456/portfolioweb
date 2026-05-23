@@ -69,13 +69,18 @@
             height: 280px;
         }
         
-        /* SEMITONO GENERATIVO - ESTILO NUBES NEGRAS */
-        .dither-hero {
+        /* CANVAS PARA DETECCIÓN DE MOVIMIENTO Y PARTÍCULAS */
+        .motion-canvas {
             position: absolute;
             inset: 0;
             z-index: 0;
             mix-blend-mode: screen;
-            opacity: 0.25;
+            opacity: 0.8;
+        }
+
+        /* VIDEO OCULTO PARA ANÁLISIS */
+        #analysisVideo {
+            display: none;
         }
 
         /* LÍNEA LED CON DEGRADADO ANIMADO - ANCHO COMPLETO */
@@ -145,7 +150,6 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             padding: 1.5rem 0;
-            /* Ocultar scrollbar */
             scrollbar-width: none;
         }
 
@@ -254,9 +258,12 @@
         </div>
     </header>
 
+    <!-- VIDEO OCULTO PARA ANÁLISIS -->
+    <video id="analysisVideo" crossorigin="anonymous"></video>
+
     <!-- HERO SECTION -->
     <section id="hero" class="relative w-full min-h-screen pt-14 flex items-center justify-center overflow-hidden bg-white">
-        <canvas id="heroDitherCanvas" class="dither-hero"></canvas>
+        <canvas id="motionCanvas" class="motion-canvas"></canvas>
         
         <div class="absolute inset-0 grid-blueprint opacity-20 z-0 pointer-events-none"></div>
 
@@ -660,81 +667,178 @@
     <script>
         const brandState = {
             chartInstance: null,
-            heroCanvas: null,
-            heroCtx: null,
-            heroAnimationId: null,
-            waveTime: 0,
-            currentAccent: '#FF5A00'
+            motionCanvas: null,
+            motionCtx: null,
+            animationId: null,
+            particles: [],
+            videoLoaded: false,
+            currentFrameData: null
         };
 
+        // Clase para partículas
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.baseX = x;
+                this.baseY = y;
+                this.radius = Math.random() * 1.5 + 0.5;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.opacity = Math.random() * 0.6 + 0.2;
+                this.lifetime = 0;
+                this.maxLifetime = Math.random() * 100 + 100;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.lifetime++;
+                
+                // Movimiento ondulante
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+                
+                // Volver al centro lentamente
+                this.x += (this.baseX - this.x) * 0.01;
+                this.y += (this.baseY - this.y) * 0.01;
+            }
+
+            draw(ctx) {
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(13, 14, 17, ${this.opacity * (1 - this.lifetime / this.maxLifetime)})`;
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', function() {
-            initHeroDither();
+            initMotionDetection();
             initColorChart();
             setGlobalAccent('#FF5A00', 'orange');
         });
 
-        function initHeroDither() {
-            brandState.heroCanvas = document.getElementById('heroDitherCanvas');
-            if (!brandState.heroCanvas) return;
-            brandState.heroCtx = brandState.heroCanvas.getContext('2d');
+        function initMotionDetection() {
+            brandState.motionCanvas = document.getElementById('motionCanvas');
+            if (!brandState.motionCanvas) return;
             
-            resizeHeroCanvas();
-            window.addEventListener('resize', resizeHeroCanvas);
+            brandState.motionCtx = brandState.motionCanvas.getContext('2d');
+            const video = document.getElementById('analysisVideo');
             
-            animateHeroDither();
+            resizeMotionCanvas();
+            window.addEventListener('resize', resizeMotionCanvas);
+
+            // Cargar video
+            video.src = './hero-motion.mp4';
+            video.loop = true;
+            video.muted = true;
+            video.crossOrigin = 'anonymous';
+
+            video.addEventListener('canplay', () => {
+                brandState.videoLoaded = true;
+                video.play();
+                animateMotion();
+            });
+
+            video.addEventListener('error', () => {
+                console.log('Video no disponible, usando animación de partículas alternativa');
+                animateMotionFallback();
+            });
         }
 
-        function resizeHeroCanvas() {
-            if (!brandState.heroCanvas) return;
-            const parent = brandState.heroCanvas.parentElement;
-            brandState.heroCanvas.width = parent.clientWidth;
-            brandState.heroCanvas.height = parent.clientHeight;
+        function resizeMotionCanvas() {
+            if (!brandState.motionCanvas) return;
+            const parent = brandState.motionCanvas.parentElement;
+            brandState.motionCanvas.width = parent.clientWidth;
+            brandState.motionCanvas.height = parent.clientHeight;
         }
 
-        function animateHeroDither() {
-            if (!brandState.heroCtx) return;
-            const ctx = brandState.heroCtx;
-            const w = brandState.heroCanvas.width;
-            const h = brandState.heroCanvas.height;
-            
+        function animateMotion() {
+            if (!brandState.videoLoaded) {
+                animateMotionFallback();
+                return;
+            }
+
+            const ctx = brandState.motionCtx;
+            const w = brandState.motionCanvas.width;
+            const h = brandState.motionCanvas.height;
+            const video = document.getElementById('analysisVideo');
+
             ctx.clearRect(0, 0, w, h);
-            
-            brandState.waveTime += 0.008;
-            
-            // Espaciado más pequeño para mayor detalle
-            const spacing = 8;
-            const waveFreq = 50;
-            const dotSize = 2.5;
-            
-            for (let x = 0; x < w; x += spacing) {
-                for (let y = 0; y < h; y += spacing) {
-                    const dX = x - w / 2;
-                    const dY = y - h / 2;
-                    const dist = Math.sqrt(dX * dX + dY * dY);
-                    
-                    // Movimiento tipo nubes
-                    const sinVal = Math.sin((dist / waveFreq) - brandState.waveTime);
-                    const cosVal = Math.cos((x / 150) + (y / 150) + brandState.waveTime * 0.5);
-                    
-                    const offset = (sinVal + cosVal) * 2.5;
-                    const radius = Math.max(0.3, (offset + 3) * (dotSize / 8));
-                    
-                    ctx.beginPath();
-                    
-                    // Negro con variación de opacidad
-                    ctx.fillStyle = '#0D0E11';
-                    
-                    // Efecto de nubes: más denso en el centro
-                    const densityFactor = Math.max(0.05, 1 - (dist / 500));
-                    ctx.globalAlpha = (radius / 3) * densityFactor * 0.35;
-                    
-                    ctx.arc(x, y, radius, 0, Math.PI * 2);
-                    ctx.fill();
+
+            // Dibujar video en canvas oculto para análisis
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = 160;
+            offCanvas.height = 90;
+            const offCtx = offCanvas.getContext('2d');
+            offCtx.drawImage(video, 0, 0, offCanvas.width, offCanvas.height);
+
+            // Obtener datos de píxeles
+            const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+            const data = imageData.data;
+
+            // Detectar movimiento y crear partículas
+            const brightness = [];
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                brightness.push((r + g + b) / 3);
+            }
+
+            // Limpiar partículas viejas
+            brandState.particles = brandState.particles.filter(p => p.lifetime < p.maxLifetime);
+
+            // Crear nuevas partículas basadas en brillo
+            for (let y = 0; y < offCanvas.height; y += 3) {
+                for (let x = 0; x < offCanvas.width; x += 3) {
+                    const idx = y * offCanvas.width + x;
+                    const bright = brightness[idx];
+
+                    // Si el píxel es brillante, crear partículas
+                    if (bright > 100 && Math.random() > 0.6) {
+                        const screenX = (x / offCanvas.width) * w;
+                        const screenY = (y / offCanvas.height) * h;
+                        brandState.particles.push(new Particle(screenX, screenY));
+                    }
                 }
             }
+
+            // Dibujar partículas
+            brandState.particles.forEach(p => {
+                p.update();
+                p.draw(ctx);
+            });
+
+            brandState.animationId = requestAnimationFrame(animateMotion);
+        }
+
+        function animateMotionFallback() {
+            // Fallback si el video no está disponible
+            const ctx = brandState.motionCtx;
+            const w = brandState.motionCanvas.width;
+            const h = brandState.motionCanvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Generar partículas con movimiento orgánico
+            if (brandState.particles.length < 80) {
+                for (let i = 0; i < 3; i++) {
+                    const x = Math.random() * w;
+                    const y = Math.random() * h;
+                    brandState.particles.push(new Particle(x, y));
+                }
+            }
+
+            // Actualizar y dibujar
+            brandState.particles = brandState.particles.filter(p => p.lifetime < p.maxLifetime);
             
-            ctx.globalAlpha = 1.0;
-            brandState.heroAnimationId = requestAnimationFrame(animateHeroDither);
+            brandState.particles.forEach(p => {
+                p.update();
+                p.draw(ctx);
+            });
+
+            brandState.animationId = requestAnimationFrame(animateMotionFallback);
         }
 
         function initColorChart() {
@@ -780,7 +884,6 @@
 
         function setGlobalAccent(hex, name) {
             document.documentElement.style.setProperty('--accent-color', hex);
-            brandState.currentAccent = hex;
             
             // Actualizar indicadores de acentos
             const indicators = document.querySelectorAll('.accent-indicator');
